@@ -1,0 +1,30 @@
+version: '3'
+services:
+  fastapi1:
+    build: .
+    ports:
+      - "8001:80"
+    volumes:
+      - ./logs/fastapi1:/app/logs
+  fastapi2:
+    build: .
+    ports:
+      - "8002:80"
+    volumes:
+        - ./logs/fastapi2:/app/logs
+  fastapi3:
+    build: .
+    ports:
+      - "8003:80"
+    volumes:
+        - ./logs/fastapi3:/app/logs
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - fastapi1
+      - fastapi2
+      - fastapi3
