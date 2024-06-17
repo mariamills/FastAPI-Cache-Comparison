@@ -99,6 +99,15 @@ def update_using_arc(item_id: str, item: Item):
     arc_cache.put(item_id, item.dict())
     return {"item_id": item_id, "item": item.dict()}
 
+@app.get("/stats")
+def get_statistics():
+    stats = {
+        "LRU": lru_cache.calculate_statistics(),
+        "LFU": lfu_cache.calculate_statistics(),
+        "ARC": arc_cache.calculate_statistics()
+    }
+    return stats
+
 
 # for testing purposes - default data endpoint
 @app.get("/data/{item_id}")
