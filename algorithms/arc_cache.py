@@ -38,14 +38,14 @@ class ARCCache:
             self.T2[key] = value  # promote to T2 due to repeated access
             self.cache[key] = (value, 'T2')  # update unified cache view
             self.hits += 1  # increment the number of hits
-            self.log_event("hit", key, {"sub_cache": "T1 to T2"})  # log the event
+            #self.log_event("hit", key, {"sub_cache": "T1 to T2"})  # log the event
             return value
         elif key in self.T2:  # if key is in T2, (move it to the end of T2)
             value = self.T2[key]  # get the value
             self.T2.move_to_end(key)  # reinforce its status by marking it as recently used within T2
             self.cache[key] = (value, 'T2')  # update cache view
             self.hits += 1
-            self.log_event("hit", key, {"sub_cache": "T2"})
+            #self.log_event("hit", key, {"sub_cache": "T2"})
             return value
         else:
             self.misses += 1
@@ -56,14 +56,14 @@ class ARCCache:
         if key in self.T1 or key in self.T2:  # if key is already in cache (T1 or T2)
             self.get(key)  # update the key's position in the cache
             self.cache[key] = (value, 'T1' if key in self.T1 else 'T2')  # update unified cache view
-            self.log_event("update", key)  # log the event
+            #self.log_event("update", key)  # log the event
             return
 
         self.evict_if_needed()  # evict an entry if the cache is full
 
         self.T1[key] = value
         self.cache[key] = (value, 'T1')  # Add to unified cache view
-        self.log_event("add", key, {"sub_cache": "T1"})
+        #self.log_event("add", key, {"sub_cache": "T1"})
 
     def evict_if_needed(self):
         # Decide which entry to evict based on the full state of cache and ghost lists (B1, B2)
@@ -71,11 +71,11 @@ class ARCCache:
             if len(self.T1) < self.capacity:  # if T1 is not full, evict from B1
                 evicted_key, _ = self.B1.popitem(last=False)  # evict the least recently used item from B1
                 self.replace()  # replace the evicted item from B1 with an item from T2
-                self.log_event("evict", evicted_key, {"sub_cache": "B1"})  # log the event (eviction from B1)
+                #self.log_event("evict", evicted_key, {"sub_cache": "B1"})  # log the event (eviction from B1)
             else:  # if T1 is full, evict from T1
                 evicted_key, _ = self.T1.popitem(last=False)  # evict the least recently used item from T1
                 del self.cache[evicted_key]  # remove the evicted item from the unified cache view
-                self.log_event("evict", evicted_key, {"sub_cache": "T1"})  # log the event (eviction from T1)
+                #self.log_event("evict", evicted_key, {"sub_cache": "T1"})  # log the event (eviction from T1)
 
     # Replace the evicted item from T1 with an item from T2 or vice versa
     def replace(self):
@@ -83,17 +83,18 @@ class ARCCache:
             evicted_key, evicted_value = self.T1.popitem(last=False)  # evict the least recently used item from T1
             self.B1[evicted_key] = evicted_value  # add the evicted item to B1
             del self.cache[evicted_key]  # remove the evicted item from the unified cache view
-            self.log_event("replace", evicted_key, {"sub_cache": "T1 to B1"})
+            #self.log_event("replace", evicted_key, {"sub_cache": "T1 to B1"})
         else:  # if T2 is larger than p or B1 is not empty and T2 is equal to p
             evicted_key, evicted_value = self.T2.popitem(last=False)  # evict the least recently used item from T2
             self.B2[evicted_key] = evicted_value  # add the evicted item to B2
             del self.cache[evicted_key]  # remove the evicted item from the unified cache view
-            self.log_event("replace", evicted_key, {"sub_cache": "T2 to B2"})
+            #self.log_event("replace", evicted_key, {"sub_cache": "T2 to B2"})
 
     def calculate_statistics(self):
         hit_ratio = self.hits / self.accesses if self.accesses > 0 else 0
         miss_ratio = self.misses / self.accesses if self.accesses > 0 else 0
-        return {"hit_ratio": hit_ratio, "miss_ratio": miss_ratio}
+        cache_size = len(self.T1) + len(self.T2)
+        return {"hit_ratio": hit_ratio, "miss_ratio": miss_ratio, "cache_size": cache_size}
 
     def log_metrics(self, event_type, key, latency):
         hit_rate = self.hits / self.accesses if self.accesses > 0 else 0

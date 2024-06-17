@@ -47,7 +47,7 @@ class LFUCache:
             self.freq[new_freq][key] = None
             self.cache[key] = (value, new_freq)  # update frequency of key
 
-            self.log_event("hit", key, {"new_freq": new_freq})
+            #self.log_event("hit", key, {"new_freq": new_freq})
             return value
 
     def put(self, key: int, value: int):
@@ -58,21 +58,23 @@ class LFUCache:
             return
 
         if len(self.cache) >= self.capacity:  # if the cache is full
-            evict_key, _ = self.freq[self.min_freq].popitem(last=False)  # remove the least frequently used item
-            if not self.freq[self.min_freq]:  # if the frequency is empty
-                del self.freq[self.min_freq]  # remove the frequency
-            del self.cache[evict_key]  # remove the key from the cache
-            self.log_event("evict", evict_key, {"evicted_freq": self.min_freq})  # log the eviction
+            if self.min_freq in self.freq and self.freq[self.min_freq]:  # check if self.freq[self.min_freq] is not empty
+                evict_key, _ = self.freq[self.min_freq].popitem(last=False)  # remove the least frequently used item
+                if not self.freq[self.min_freq]:  # if the frequency is empty
+                    del self.freq[self.min_freq]  # remove the frequency
+                del self.cache[evict_key]  # remove the key from the cache
+                self.log_event("evict", evict_key, {"evicted_freq": self.min_freq})  # log the eviction
 
         self.cache[key] = (value, 1)
         self.freq[1][key] = None
         self.min_freq = 1 if len(self.cache) == 0 else self.min_freq
-        self.log_event("add", key, {"initial_freq": 1})
+        # self.log_event("add", key, {"initial_freq": 1})
 
     def calculate_statistics(self):
         hit_ratio = self.hits / self.accesses if self.accesses > 0 else 0
         miss_ratio = self.misses / self.accesses if self.accesses > 0 else 0
-        return {"hit_ratio": hit_ratio, "miss_ratio": miss_ratio}
+        cache_size = len(self.cache)
+        return {"hit_ratio": hit_ratio, "miss_ratio": miss_ratio, "cache_size": cache_size}
 
 
     def log_metrics(self, event_type, key, latency):
